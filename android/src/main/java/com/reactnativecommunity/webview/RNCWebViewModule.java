@@ -42,6 +42,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static android.app.Activity.RESULT_OK;
 
+// when we need to input the image, the app will directly open the camera and remove file attachment selection
+
 @ReactModule(name = RNCWebViewModule.MODULE_NAME)
 public class RNCWebViewModule extends ReactContextBaseJavaModule implements ActivityEventListener {
   public static final String MODULE_NAME = "RNCWebView";
@@ -61,7 +63,7 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
       DO_NOT_OVERRIDE,
     }
 
-    private int nextLockIdentifier = 1;
+    private int nextLockIdentifier = 0;
     private final HashMap<Integer, AtomicReference<ShouldOverrideCallbackState>> shouldOverrideLocks = new HashMap<>();
 
     public synchronized Pair<Integer, AtomicReference<ShouldOverrideCallbackState>> getNewLock() {
@@ -84,7 +86,7 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
   protected static final ShouldOverrideUrlLoadingLock shouldOverrideUrlLoadingLock = new ShouldOverrideUrlLoadingLock();
 
   private enum MimeType {
-    DEFAULT("*/*"),
+    // DEFAULT("*/*"),
     IMAGE("image"),
     VIDEO("video");
 
@@ -279,12 +281,6 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
           extraIntents.add(photoIntent);
         }
       }
-      if (acceptsVideo(acceptTypes)) {
-        Intent videoIntent = getVideoIntent();
-        if (videoIntent != null) {
-          extraIntents.add(videoIntent);
-        }
-      }
     }
 
     Intent fileSelectionIntent = getFileChooserIntent(acceptTypes, allowMultiple);
@@ -382,7 +378,7 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
   private Intent getFileChooserIntent(String acceptTypes) {
     String _acceptTypes = acceptTypes;
     if (acceptTypes.isEmpty()) {
-      _acceptTypes = MimeType.DEFAULT.value;
+      _acceptTypes = MimeType.IMAGE.value;
     }
     if (acceptTypes.matches("\\.\\w+")) {
       _acceptTypes = getMimeTypeFromExtension(acceptTypes.replace(".", ""));
@@ -396,9 +392,9 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
   private Intent getFileChooserIntent(String[] acceptTypes, boolean allowMultiple) {
     Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
     intent.addCategory(Intent.CATEGORY_OPENABLE);
-    intent.setType(MimeType.DEFAULT.value);
+    intent.setType(MimeType.IMAGE.value);
     intent.putExtra(Intent.EXTRA_MIME_TYPES, getAcceptedMimeType(acceptTypes));
-    intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, allowMultiple);
+    // intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, allowMultiple);
     return intent;
   }
 
@@ -412,7 +408,7 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
 
   private Boolean acceptsImages(String[] types) {
     String[] mimeTypes = getAcceptedMimeType(types);
-    return arrayContainsString(mimeTypes, MimeType.DEFAULT.value) || arrayContainsString(mimeTypes, MimeType.IMAGE.value);
+    return arrayContainsString(mimeTypes, MimeType.IMAGE.value) || arrayContainsString(mimeTypes, MimeType.IMAGE.value);
   }
 
   private Boolean acceptsVideo(String types) {
@@ -433,7 +429,7 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
     }
 
     String[] mimeTypes = getAcceptedMimeType(types);
-    return arrayContainsString(mimeTypes, MimeType.DEFAULT.value) || arrayContainsString(mimeTypes, MimeType.VIDEO.value);
+    return arrayContainsString(mimeTypes, MimeType.IMAGE.value) || arrayContainsString(mimeTypes, MimeType.VIDEO.value);
   }
 
   private Boolean arrayContainsString(String[] array, String pattern) {
@@ -447,7 +443,7 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
 
   private String[] getAcceptedMimeType(String[] types) {
     if (noAcceptTypesSet(types)) {
-      return new String[]{MimeType.DEFAULT.value};
+      return new String[]{MimeType.IMAGE.value};
     }
     String[] mimeTypes = new String[types.length];
     for (int i = 0; i < types.length; i++) {
